@@ -1,0 +1,73 @@
+name: 'Zulip Archive'
+description: 'Publish Zulip archive in GitHub pages'
+inputs:
+  zulip_organization_url:
+    description: 'URL of Zulip organization'
+    required: true
+  zulip_bot_email:
+    description: 'Email of the Zulip bot'
+    required: true
+  zulip_bot_key:
+    description: 'API key of the Zulip bot'
+    required: true
+runs:
+  using: "composite"
+  steps:
+    - name: Workaround "https://github.com/actions/toolkit/issues/1035"
+      shell: bash
+      run: |
+        cp "${{ github.action_path }}/../requirements.txt" "requirements.txt"
+    - name: Checkout Current Repository
+      uses: actions/checkout@v2
+      with:
+        path: ./source-repo/
+    - name: Setup Python
+      uses: actions/setup-python@v4.4.0
+      with:
+        python-version: "3.10"
+        cache: pip
+    - name: Install dependencies
+      shell: bash
+      run: |
+        pip install -r "${{ github.action_path }}/../requirements.txt"
+        pip3 install crudini
+    - name: Setup Pages
+      id: pages-setup
+      uses: actions/configure-pages@v2
+    - name: Configure crudini and other settings
+      shell: bash
+      run: |
+        crudini --set "${{ github.action_path }}/../zuliprc" api site "${{ inputs.zulip_organization_url }}"
+        crudini --set "${{ github.action_path }}/../zuliprc" api key "${{ inputs.zulip_bot_key }}"
+        crudini --set "${{ github.action_path }}/../zuliprc" api email "${{ inputs.zulip_bot_email }}"
+        
+        cp "${{ github.action_path }}/../default_settings.py" "${{ github.action_path }}/../settings.py"
+        cp "streams.yaml" "${{ github.action_path }}/../streams.yaml"
+        
+        echo "PROD_ARCHIVE=true" >> $GITHUB_ENV
+        echo "HTML_DIRECTORY=$(pwd)/build/html" >> $GITHUB_ENV
+        echo "JSON_DIRECTORY=$(pwd)/source-repo/zulip_json" >> $GITHUB_ENV
+        echo "SITE_URL=${{ steps.pages-setup.outputs.base_url }}" >> $GITHUB_ENV
+        echo "HTML_ROOT=" >> $GITHUB_ENV
+    - name: Update JSON
+      shell: bash
+      run: |
+        cd "${{ github.action_path }}/.."
+        python3 archive.py -i
+    - name: show git diff
+      shell: bash
+      run: |
+        git status
+    - name: Build HTML
+      shell: bash
+      run: |
+        mkdir -p build/html
+        cd "${{ github.action_path }}/.."
+        python3 archive.py -b
+    - name: Upload artifact
+      uses: actions/upload-pages-artifact@v1
+      with:
+        path: 'build/html'
+    - name: Deploy to GitHub Pages
+      id: deployment
+      uses: actions/deploy-pages@v1
