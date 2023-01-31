@@ -10,6 +10,9 @@ inputs:
   zulip_bot_key:
     description: 'API key of the Zulip bot'
     required: true
+  commit_new_json:
+    description: 'Whether to commit back the incrementally updated JSON'
+    default: 'false'
 runs:
   using: "composite"
   steps:
@@ -40,10 +43,10 @@ runs:
         crudini --set "${{ github.action_path }}/../zuliprc" api site "${{ inputs.zulip_organization_url }}"
         crudini --set "${{ github.action_path }}/../zuliprc" api key "${{ inputs.zulip_bot_key }}"
         crudini --set "${{ github.action_path }}/../zuliprc" api email "${{ inputs.zulip_bot_email }}"
-        
+
         cp "${{ github.action_path }}/../default_settings.py" "${{ github.action_path }}/../settings.py"
         cp "streams.yaml" "${{ github.action_path }}/../streams.yaml"
-        
+
         echo "PROD_ARCHIVE=true" >> $GITHUB_ENV
         echo "HTML_DIRECTORY=$(pwd)/build/jekyll" >> $GITHUB_ENV
         echo "JSON_DIRECTORY=$(pwd)/source-repo/zulip_json" >> $GITHUB_ENV
@@ -57,6 +60,7 @@ runs:
     - name: show git diff
       shell: bash
       run: |
+        cd ./source-repo
         git status
     - name: Build Markdown
       shell: bash
@@ -65,6 +69,18 @@ runs:
         cp -r _includes _layouts _sass assets css _config.yml build/jekyll
         cd "${{ github.action_path }}/.."
         python3 archive.py -b
+
+    - name: Update JSON
+      shell: bash
+      if: ${{ inputs.commit_new_json == 'true' }}
+      run: |
+        cd source-repo
+        git add zulip_json
+        git config --global user.name "Archive Bot"
+        git config --global user.email "zulip-archive-bot@users.noreply.github.com"
+        git commit -m "Update archive."
+        git push
+
     - name: Build Jekyll for GitHub Pages
       uses: actions/jekyll-build-pages@v1.0.6
       with:
