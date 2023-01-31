@@ -82,20 +82,19 @@ git fetch origin
 current_sha="$(git rev-parse origin/master)"
 
 if [[ "$current_sha" != "$initial_sha" ]]
-then 
+then
   echo "Archive update failed, commits have been added while processing"
-  exit 1 
-fi 
+  exit 1
+fi
 
 echo "delete history: $delete_history"
 
 if [[ "$delete_history" == "true" ]]
-then 
+then
     echo "resetting"
-    rm -rf .git 
-    git init 
-fi 
-
+    rm -rf .git
+    git init
+fi
 
 git config --global user.email "zulip-archive-bot@users.noreply.github.com"
 git config --global user.name "Archive Bot"
