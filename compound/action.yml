@@ -45,7 +45,7 @@ runs:
         cp "streams.yaml" "${{ github.action_path }}/../streams.yaml"
         
         echo "PROD_ARCHIVE=true" >> $GITHUB_ENV
-        echo "HTML_DIRECTORY=$(pwd)/build/html" >> $GITHUB_ENV
+        echo "HTML_DIRECTORY=$(pwd)/build/jekyll" >> $GITHUB_ENV
         echo "JSON_DIRECTORY=$(pwd)/source-repo/zulip_json" >> $GITHUB_ENV
         echo "SITE_URL=${{ steps.pages-setup.outputs.base_url }}" >> $GITHUB_ENV
         echo "HTML_ROOT=" >> $GITHUB_ENV
@@ -58,12 +58,18 @@ runs:
       shell: bash
       run: |
         git status
-    - name: Build HTML
+    - name: Build Markdown
       shell: bash
       run: |
-        mkdir -p build/html
+        mkdir -p build/jekyll
+        cp -r _includes _layouts _sass assets css _config.yml build/jekyll
         cd "${{ github.action_path }}/.."
         python3 archive.py -b
+    - name: Build Jekyll for GitHub Pages
+      uses: actions/jekyll-build-pages@v1.0.6
+      with:
+        source: build/jekyll
+        destination: build/html
     - name: Upload artifact
       uses: actions/upload-pages-artifact@v1
       with:
