@@ -18,7 +18,7 @@ runs:
       run: |
         cp "${{ github.action_path }}/../requirements.txt" "requirements.txt"
     - name: Checkout Current Repository
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
       with:
         path: ./source-repo/
     - name: Setup Python
@@ -33,7 +33,7 @@ runs:
         pip3 install crudini
     - name: Setup Pages
       id: pages-setup
-      uses: actions/configure-pages@v2
+      uses: actions/configure-pages@v5
     - name: Configure crudini and other settings
       shell: bash
       run: |
@@ -65,9 +65,9 @@ runs:
         cd "${{ github.action_path }}/.."
         python3 archive.py -b
     - name: Upload artifact
-      uses: actions/upload-pages-artifact@v1
+      uses: actions/upload-pages-artifact@v3
       with:
         path: 'build/html'
     - name: Deploy to GitHub Pages
       id: deployment
-      uses: actions/deploy-pages@v1
+      uses: actions/deploy-pages@v4
