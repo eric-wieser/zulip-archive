@@ -16,6 +16,7 @@ If you are interested in porting this system away from Python to your
 language of choice, this is probably the best place to start.
 '''
 
+import re
 from pathlib import Path
 from shutil import copyfile
 
@@ -109,7 +110,7 @@ def write_main_page(md_root, site_url, html_root, title, streams, date_footer):
 
     content = stream_list_page(streams)
 
-    outfile.write(content)
+    outfile.write(raw_liquid(content))
     outfile.write(date_footer)
     outfile.close()
 
@@ -135,7 +136,7 @@ def write_stream_topics(md_root, site_url, html_root, title, stream_name, stream
 
     content = topic_list_page(stream_name, stream_url, topic_data)
 
-    outfile.write(content)
+    outfile.write(raw_liquid(content))
     outfile.write(date_footer)
     outfile.close()
 
@@ -203,10 +204,7 @@ def write_topic_messages(
         topic_name,
         )
 
-    outfile.write(topic_links)
-    outfile.write('\n<head><link href="/style.css" rel="stylesheet"></head>\n')
-
-    outfile.write('\n{% raw %}\n')
+    body = [topic_links, '\n<head><link href="/style.css" rel="stylesheet"></head>\n']
 
     for msg in messages:
         msg_html = format_message(
@@ -219,13 +217,22 @@ def write_topic_messages(
                 topic_name,
                 msg,
                 )
-        outfile.write(msg_html)
-        outfile.write('\n\n')
+        body.append(msg_html)
+        body.append('\n\n')
 
-    outfile.write('\n{% endraw %}\n')
+    outfile.write(raw_liquid(''.join(body)))
 
     outfile.write(date_footer)
     outfile.close()
+
+def raw_liquid(html):
+    '''
+    Wrap generated content in a Liquid `raw` block, so that Jekyll does not try to
+    interpret `{{` or `{%` in stream names, topic names or messages.  A `raw` block
+    cannot contain its own terminator, so any literal `{% endraw` is neutralised.
+    '''
+    html = re.sub(r'\{%(-?\s*endraw)', r'{&#37;\1', html)
+    return '\n{% raw %}\n' + html + '\n{% endraw %}\n'
 
 def write_css(md_root):
     copyfile('style.css', md_root / 'style.css')
