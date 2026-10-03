@@ -21,11 +21,11 @@ runs:
       run: |
         cp "${{ github.action_path }}/../requirements.txt" "requirements.txt"
     - name: Checkout Current Repository
-      uses: actions/checkout@v4
+      uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       with:
         path: ./source-repo/
     - name: Setup Python
-      uses: actions/setup-python@v4.4.0
+      uses: actions/setup-python@5ccb29d8773c3f3f653e1705f474dfaa8a06a912 # v4.4.0
       with:
         python-version: "3.8"
         cache: pip
@@ -36,7 +36,7 @@ runs:
         pip3 install crudini
     - name: Setup Pages
       id: pages-setup
-      uses: actions/configure-pages@v5
+      uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5
     - name: Configure crudini and other settings
       shell: bash
       run: |
@@ -82,14 +82,14 @@ runs:
         git push
 
     - name: Build Jekyll for GitHub Pages
-      uses: actions/jekyll-build-pages@v1.0.6
+      uses: actions/jekyll-build-pages@55cb9c51abcec8911fb5e5a5cee4ee2de571c9f7 # v1.0.6
       with:
         source: build/jekyll
         destination: build/html
     - name: Upload artifact
-      uses: actions/upload-pages-artifact@v3
+      uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
       with:
         path: 'build/html'
     - name: Deploy to GitHub Pages
       id: deployment
-      uses: actions/deploy-pages@v4
+      uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4
